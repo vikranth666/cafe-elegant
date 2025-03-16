@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { loginStart, loginSuccess, loginFailure } from '../../store/slices/authSlice';
+const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/auth`;
 
 const MotionPaper = motion.create(Paper);
 
@@ -64,7 +65,7 @@ const Login = () => {
     dispatch(loginStart());
     
     try {
-      const response = await fetch('http://localhost:1234/api/auth/login', {
+      const response = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
