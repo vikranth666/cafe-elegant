@@ -23,7 +23,7 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ["http://localhost:5173", "http://localhost:1234", "https://js.stripe.com"],
+  origin: ["https://cafe-elegant-new.vercel.app/", "http://localhost:1234", "https://js.stripe.com"],
   methods: ["GET", "POST","PUT","DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
