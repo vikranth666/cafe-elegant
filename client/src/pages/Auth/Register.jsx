@@ -13,6 +13,8 @@ import { motion } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { registerStart, registerSuccess, registerFailure } from '../../store/slices/authSlice';
+const API_URL = `${import.meta.env.VITE_BACKEND_URL}/api/auth`;
+
 
 const MotionPaper = motion.create(Paper);
 
@@ -43,7 +45,7 @@ const Register = () => {
     dispatch(registerStart());
 
     try {
-      const response = await fetch('http://localhost:1234/api/auth/register', {
+      const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
