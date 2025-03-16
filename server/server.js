@@ -51,7 +51,7 @@ app.use(
           "https://api.stripe.com",
           "https://r.stripe.com",
           "https://cafe-elegant.onrender.com", 
-          "https://cafe-elegant.vercel.app" 
+          "https://cafe-elegant-new.vercel.app" 
         ],
         scriptSrc: [
           "'self'",
