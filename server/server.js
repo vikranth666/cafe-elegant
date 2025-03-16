@@ -45,11 +45,13 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        connectSrc: [
+       connectSrc: [
           "'self'",
           "http://localhost:1234",
           "https://api.stripe.com",
-          "https://r.stripe.com"
+          "https://r.stripe.com",
+          "https://cafe-elegant.onrender.com", 
+          "https://cafe-elegant.vercel.app" 
         ],
         scriptSrc: [
           "'self'",
