@@ -49,7 +49,7 @@ const Store = () => {
       {
         id: 2,
         name: 'Ethiopian Yirgacheffe',
-        description: 'Light roast single-origin with floral and citrus notes',
+        description: 'Light roast single-origin coffee with delicate floral and citrus notes.',
         price: 16.99,
         image:'/assets/store/EY.jpeg'
       },
@@ -86,7 +86,7 @@ const Store = () => {
       {
         id: 7,
         name: 'Pour-Over Coffee Maker',
-        description: 'Classic glass pour-over dripper with wooden collar',
+        description: 'Classic glass pour-over dripper with a stylish wooden collar',
         price: 29.99,
         image:'/assets/store/POCM.webp'
       },
