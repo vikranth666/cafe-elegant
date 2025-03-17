@@ -453,51 +453,51 @@ const OrderSummary = ({ onBack, orderData }) => {
     console.log(" Debug - Order Data:", orderData);
   
     //  Handle Order Completion
-  const handleComplete = async () => {
-  try {
-    dispatch(setOrderProcessing(true));
-
-    // Validate order data
-    if (!orderData?.shippingDetails || !orderData?.paymentDetails) {
-      console.error("Missing order data!", orderData);
-      return;
-    }
-
-    // Calculate total amount
-    const totalAmount = total + 5.99 + total * 0.08;
-
-    // Create order object
-    const order = {
-      id: uuidv4(),
-      userId: user?.id || "guest",
-      date: new Date().toISOString(),
-      status: "processing",
-      items: cartItems.map(({ id, name, price, quantity, image }) => ({
-        id, name, price, quantity, image,
-      })),
-      shippingAddress: orderData.shippingDetails.shippingAddress,
-      paymentDetails: orderData.paymentDetails,
-      subtotal: total,
-      shipping: 5.99,
-      tax: total * 0.08,
-      totalAmount,
+    const handleComplete = async () => {
+      try {
+        dispatch(setOrderProcessing(true));
+    
+        // Validate order data
+        if (!orderData?.shippingDetails || !orderData?.paymentDetails) {
+          console.error("Missing order data!", orderData);
+          return;
+        }
+    
+        // Calculate total amount
+        const totalAmount = total + 5.99 + total * 0.08;
+    
+        // Create order object
+        const order = {
+          id: uuidv4(),
+          userId: user?.id || "guest",
+          date: new Date().toISOString(),
+          status: "processing",
+          items: cartItems.map(({ id, name, price, quantity, image }) => ({
+            id, name, price, quantity, image,
+          })),
+          shippingAddress: orderData.shippingDetails.shippingAddress,
+          paymentDetails: orderData.paymentDetails,
+          subtotal: total,
+          shipping: 5.99,
+          tax: total * 0.08,
+          totalAmount,
+        };
+    
+        // Dispatch createOrder action (assuming it updates the user's profile)
+        await dispatch(createOrder(order)).unwrap();
+    
+        // Clear cart and mark order as complete
+        dispatch(clearCart());
+        dispatch(setOrderComplete(true));
+    
+        // Navigate to Profile with order ID
+        navigate("/profile", { state: { orderId: order.id } });
+      } catch (error) {
+        console.error("Error processing order:", error);
+      } finally {
+        dispatch(setOrderProcessing(false));
+      }
     };
-
-    // Dispatch createOrder action (assuming it updates the user's profile)
-    await dispatch(createOrder(order)).unwrap();
-
-    // Clear cart and mark order as complete
-    dispatch(clearCart());
-    dispatch(setOrderComplete(true));
-
-    // Navigate to Profile with order ID
-    navigate("/profile", { state: { orderId: order.id } });
-  } catch (error) {
-    console.error("Error processing order:", error);
-  } finally {
-    dispatch(setOrderProcessing(false));
-  }
-};
   
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
