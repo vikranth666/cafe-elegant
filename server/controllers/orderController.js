@@ -167,3 +167,22 @@ export const deleteOrder = async (req, res) => {
   }
 };
 
+// orderController.js
+export const fetchOrders = async (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    // Validate userId
+    if (!userId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Fetch orders for the user
+    const orders = await Order.find({ userId });
+    console.log("Orders being sent:", orders);
+    res.status(200).json(orders || []);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    res.status(500).json({ message: "Error fetching orders" });
+  }
+};
