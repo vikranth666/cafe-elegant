@@ -34,7 +34,6 @@ export const updateUserProfile = createAsyncThunk(
     }
   }
 );
-
 //  Update User Address
 export const updateUserAddress = createAsyncThunk(
   'auth/updateAddress',
@@ -131,39 +130,36 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(updateUserProfile.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateUserProfile.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-        localStorage.setItem('user', JSON.stringify(action.payload)); 
-      })
-      .addCase(updateUserProfile.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // New address async thunk handlers
-      .addCase(updateUserAddress.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-
-      })
-      .addCase(updateUserAddress.fulfilled, (state, action) => {
-        state.loading = false;
-        state.user = action.payload;
-        localStorage.setItem('user', JSON.stringify(action.payload));
-      })
-      .addCase(updateUserAddress.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-      // ✅ Handle Logout Async Thunk
-      .addCase(logoutUser.fulfilled, (state) => {
-        state.user = null;
-        state.token = null;
-      });
+    .addCase(updateUserProfile.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(updateUserProfile.fulfilled, (state, action) => {
+      state.loading = false;
+      state.user = action.payload; // Update the entire user object
+      localStorage.setItem('user', JSON.stringify(action.payload));
+    })
+    .addCase(updateUserProfile.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    })
+    .addCase(updateUserAddress.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(updateUserAddress.fulfilled, (state, action) => {
+      state.loading = false;
+      state.user = action.payload; // Update the entire user object
+      localStorage.setItem('user', JSON.stringify(action.payload));
+    })
+    .addCase(updateUserAddress.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    })
+    .addCase(logoutUser.fulfilled, (state) => {
+      state.user = null;
+      state.token = null;
+    });
   }
 });
 
