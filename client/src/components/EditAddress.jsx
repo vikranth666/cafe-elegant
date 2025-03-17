@@ -10,17 +10,16 @@ import {
   TextField,
   Button,
   Grid,
-  Avatar,
   IconButton,
+  MenuItem,
   Snackbar,
   Alert,
   CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PersonIcon from '@mui/icons-material/Person';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
-import { updateUserProfile } from '../store/slices/authSlice';
+import HomeIcon from '@mui/icons-material/Home';
+import { updateUserAddress } from '../store/slices/authSlice';
 
 // Animation variants
 const pageAnimation = {
@@ -37,28 +36,60 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
 }));
 
-const ProfileAvatar = styled(Avatar)(({ theme }) => ({
-  width: 120,
-  height: 120,
+const AddressIcon = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 80,
+  height: 80,
   margin: '0 auto',
   marginBottom: theme.spacing(3),
-  border: `4px solid ${theme.palette.background.paper}`,
-  boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-  position: 'relative',
+  borderRadius: '50%',
+  backgroundColor: theme.palette.primary.light,
+  color: theme.palette.primary.main,
 }));
 
-const UploadButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
-  bottom: 0,
-  right: 0,
-  backgroundColor: theme.palette.primary.main,
-  color: theme.palette.common.white,
-  '&:hover': {
-    backgroundColor: theme.palette.primary.dark,
-  },
-}));
+// Indian States list for dropdown
+const INDIAN_STATES = [
+  { value: 'AP', label: 'Andhra Pradesh' },
+  { value: 'AR', label: 'Arunachal Pradesh' },
+  { value: 'AS', label: 'Assam' },
+  { value: 'BR', label: 'Bihar' },
+  { value: 'CT', label: 'Chhattisgarh' },
+  { value: 'GA', label: 'Goa' },
+  { value: 'GJ', label: 'Gujarat' },
+  { value: 'HR', label: 'Haryana' },
+  { value: 'HP', label: 'Himachal Pradesh' },
+  { value: 'JH', label: 'Jharkhand' },
+  { value: 'KA', label: 'Karnataka' },
+  { value: 'KL', label: 'Kerala' },
+  { value: 'MP', label: 'Madhya Pradesh' },
+  { value: 'MH', label: 'Maharashtra' },
+  { value: 'MN', label: 'Manipur' },
+  { value: 'ML', label: 'Meghalaya' },
+  { value: 'MZ', label: 'Mizoram' },
+  { value: 'NL', label: 'Nagaland' },
+  { value: 'OD', label: 'Odisha' },
+  { value: 'PB', label: 'Punjab' },
+  { value: 'RJ', label: 'Rajasthan' },
+  { value: 'SK', label: 'Sikkim' },
+  { value: 'TN', label: 'Tamil Nadu' },
+  { value: 'TG', label: 'Telangana' },
+  { value: 'TR', label: 'Tripura' },
+  { value: 'UP', label: 'Uttar Pradesh' },
+  { value: 'UK', label: 'Uttarakhand' },
+  { value: 'WB', label: 'West Bengal' },
+  { value: 'AN', label: 'Andaman and Nicobar Islands' },
+  { value: 'CH', label: 'Chandigarh' },
+  { value: 'DN', label: 'Dadra and Nagar Haveli and Daman and Diu' },
+  { value: 'DL', label: 'Delhi' },
+  { value: 'JK', label: 'Jammu and Kashmir' },
+  { value: 'LA', label: 'Ladakh' },
+  { value: 'LD', label: 'Lakshadweep' },
+  { value: 'PY', label: 'Puducherry' }
+];
 
-const EditProfile = () => {
+const EditAddress = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
@@ -69,10 +100,13 @@ const EditProfile = () => {
   
   // Local state for form
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
+    street: '',
+    buildingName: '',
+    landmark: '',
+    city: '',
+    state: '',
+    pinCode: '',
+    isDefault: true,
   });
   
   const [snackbar, setSnackbar] = useState({
@@ -88,13 +122,16 @@ const EditProfile = () => {
       return;
     }
     
-    // Initialize form with user data
-    if (user) {
+    // Initialize form with user address data if it exists
+    if (user && user.address) {
       setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || '',
-        phone: user.phone || '',
+        street: user.address.street || '',
+        buildingName: user.address.buildingName || '',
+        landmark: user.address.landmark || '',
+        city: user.address.city || '',
+        state: user.address.state || '',
+        pinCode: user.address.pinCode || '',
+        isDefault: true,
       });
     }
   }, [user, token, navigate]);
@@ -112,11 +149,11 @@ const EditProfile = () => {
     
     try {
       // Dispatch update action
-      await dispatch(updateUserProfile(formData)).unwrap();
+      await dispatch(updateUserAddress(formData)).unwrap();
       
       setSnackbar({
         open: true,
-        message: 'Profile updated successfully!',
+        message: 'Address updated successfully!',
         severity: 'success'
       });
       
@@ -127,7 +164,7 @@ const EditProfile = () => {
     } catch (error) {
       setSnackbar({
         open: true,
-        message: error || 'Failed to update profile',
+        message: error || 'Failed to update address',
         severity: 'error'
       });
     }
@@ -163,73 +200,99 @@ const EditProfile = () => {
           <IconButton onClick={() => navigate('/profile')} sx={{ mr: 1 }}>
             <ArrowBackIcon />
           </IconButton>
-          <Typography variant="h5">Edit Profile</Typography>
+          <Typography variant="h5">
+            {user.address?.street ? 'Update Address' : 'Add New Address'}
+          </Typography>
         </Box>
         
         <StyledPaper>
           <form onSubmit={handleSubmit}>
             <Box sx={{ textAlign: 'center', mb: 4 }}>
-              <ProfileAvatar>
-                {user.profileImage ? (
-                  <img 
-                    src={user.profileImage} 
-                    alt={`${user.firstName} ${user.lastName}`}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                  />
-                ) : (
-                  <PersonIcon sx={{ fontSize: 64 }} />
-                )}
-                <UploadButton>
-                  <PhotoCameraIcon fontSize="small" />
-                </UploadButton>
-              </ProfileAvatar>
+              <AddressIcon>
+                <HomeIcon sx={{ fontSize: 40 }} />
+              </AddressIcon>
+              <Typography variant="h6" gutterBottom>
+                Shipping Address
+              </Typography>
               <Typography variant="body2" color="text.secondary">
-                Upload a profile picture
+                This address will be used for shipping your orders
               </Typography>
             </Box>
             
             <Grid container spacing={3}>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="First Name"
-                  name="firstName"
-                  value={formData.firstName}
+                  label="Flat, House no., Building, Company, Apartment"
+                  name="street"
+                  value={formData.street}
                   onChange={handleChange}
                   required
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Last Name"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
+                  placeholder="42, Sunshine Apartments"
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Email Address"
-                  name="email"
-                  type="email"
-                  value={formData.email}
+                  label="Area, Street, Sector, Village"
+                  name="buildingName"
+                  value={formData.buildingName}
                   onChange={handleChange}
                   required
-                  disabled
-                  helperText="Email cannot be changed"
+                  placeholder="MG Road, Sector 14"
                 />
               </Grid>
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  label="Phone Number"
-                  name="phone"
-                  value={formData.phone}
+                  label="Landmark (optional)"
+                  name="landmark"
+                  value={formData.landmark}
                   onChange={handleChange}
-                  placeholder="(123) 456-7890"
+                  placeholder="Near Apollo Hospital"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Town/City"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleChange}
+                  required
+                  placeholder="Mumbai"
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  fullWidth
+                  label="State"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleChange}
+                  required
+                >
+                  {INDIAN_STATES.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="PIN Code"
+                  name="pinCode"
+                  value={formData.pinCode}
+                  onChange={handleChange}
+                  required
+                  inputProps={{
+                    pattern: "[0-9]{6}",
+                    maxLength: 6
+                  }}
+                  placeholder="400001"
                 />
               </Grid>
               <Grid item xs={12} sx={{ mt: 2 }}>
@@ -241,7 +304,7 @@ const EditProfile = () => {
                   size="large"
                   disabled={loading}
                 >
-                  {loading ? <CircularProgress size={24} /> : 'Save Changes'}
+                  {loading ? <CircularProgress size={24} /> : 'Save Address'}
                 </Button>
               </Grid>
             </Grid>
@@ -267,4 +330,4 @@ const EditProfile = () => {
   );
 };
 
-export default EditProfile;
+export default EditAddress;
