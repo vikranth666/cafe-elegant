@@ -4,36 +4,39 @@ import jwt from 'jsonwebtoken';
 import asyncHandler from 'express-async-handler';
 
 
-export const register = async (req, res) => {
-    try {
-      console.log('Request body:', req.body);  // Log incoming request body to inspect
-      const { name, email, password, role } = req.body;
-  
-      if (!name || !email || !password) {
-        return res.status(400).json({ message: 'Name, email, and password are required' });
-      }
-  
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email already in use' });
-      }
-  
-      const hashedPassword = await bcrypt.hash(password, 10);
-  
-      const newUser = new User({
-        name,
-        email,
-        password: hashedPassword,
-        role: role || 'user',  // Defaults to 'user' if no role is provided
-      });
-  
-      await newUser.save();
-      res.status(201).json({ message: 'User registered successfully' });
-    } catch (error) {
-      console.error('Error registering user:', error);  // Log the error to the console
-      res.status(500).json({ message: 'Error registering user', error: error.message });
-    }
-  };
+export const register = asyncHandler(async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  // Validate required fields
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'Name, email, and password are required' });
+  }
+
+  // Check if user already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ message: 'Email already in use' });
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Create new user
+  const newUser = new User({
+    name,
+    email,
+    password: hashedPassword,
+    role: role || 'user',
+  });
+
+  await newUser.save();
+
+  res.status(201).json({
+    success: true,
+    message: 'User registered successfully',
+    data: { id: newUser._id, name: newUser.name, email: newUser.email },
+  });
+});
   
 
   export const login = async (req, res) => {
