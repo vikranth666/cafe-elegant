@@ -4,12 +4,15 @@ import jwt from 'jsonwebtoken';
 import asyncHandler from 'express-async-handler';
 
 
+// Register a new user
 export const register = asyncHandler(async (req, res) => {
-  const { name, email, password, role } = req.body;
+  console.log('Request body:', req.body); // Log the incoming request body
+
+  const { username, email, password, role } = req.body; 
 
   // Validate required fields
-  if (!name || !email || !password) {
-    return res.status(400).json({ message: 'Name, email, and password are required' });
+  if (!username || !email || !password) {
+    return res.status(400).json({ message: 'Username, email, and password are required' });
   }
 
   // Check if user already exists
@@ -23,7 +26,7 @@ export const register = asyncHandler(async (req, res) => {
 
   // Create new user
   const newUser = new User({
-    name,
+    name: username, // Map `username` to `name` in the database
     email,
     password: hashedPassword,
     role: role || 'user',
@@ -37,7 +40,6 @@ export const register = asyncHandler(async (req, res) => {
     data: { id: newUser._id, name: newUser.name, email: newUser.email },
   });
 });
-  
 
   export const login = async (req, res) => {
     try {
@@ -66,66 +68,80 @@ export const register = asyncHandler(async (req, res) => {
 // Update user profile
 
 export const updateProfile = asyncHandler(async (req, res) => {
-    const userId = req.user.id; // Extracted from verifyToken middleware
-    const { firstName, lastName, phone } = req.body;
+  const userId = req.user.id; // Extracted from verifyToken middleware
+  const { firstName, lastName, phone } = req.body;
 
-    try {
-        // Find user by ID
-        const user = await User.findById(userId);
+  try {
+    // Find user by ID
+    const user = await User.findById(userId);
 
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Update only the allowed fields
-        user.firstName = firstName || user.firstName;
-        user.lastName = lastName || user.lastName;
-        user.phone = phone || user.phone;
-
-        // Save updated user
-        const updatedUser = await user.save();
-
-        res.json({
-            id: updatedUser._id,
-            firstName: updatedUser.firstName,
-            lastName: updatedUser.lastName,
-            email: updatedUser.email, // Email remains unchanged
-            phone: updatedUser.phone,
-            profileImage: updatedUser.profileImage,
-        });
-
-    } catch (error) {
-        console.error("Profile update error:", error);
-        res.status(500).json({ message: "Profile update failed" });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
     }
-});
 
+    // Update only the allowed fields
+    user.firstName = firstName || user.firstName;
+    user.lastName = lastName || user.lastName;
+    user.phone = phone || user.phone;
+
+    // Save updated user
+    const updatedUser = await user.save();
+
+    res.json({
+      id: updatedUser._id,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      email: updatedUser.email, // Email remains unchanged
+      phone: updatedUser.phone,
+      profileImage: updatedUser.profileImage,
+      address: updatedUser.address, // Include address in the response
+    });
+
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ message: "Profile update failed" });
+  }
+});
 
 //  Update User Address
 
 export const updateAddress = asyncHandler(async (req, res) => {
-    const userId = req.user.id;
-    const { street, buildingName, landmark, city, state, pinCode, isDefault } = req.body;
+  const userId = req.user.id;
+  const { street, buildingName, landmark, city, state, pinCode, isDefault } = req.body;
 
-    console.log('Received Address Data:', req.body);
+  console.log('Received Address Data:', req.body);
 
-    if (!street || !city || !state || !pinCode) {
-        return res.status(400).json({ message: 'Street, city, state, and pin code are required' });
-    }
+  if (!street || !city || !state || !pinCode) {
+    return res.status(400).json({ message: 'Street, city, state, and pin code are required' });
+  }
 
-    try {
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).json({ message: 'User not found' });
+  try {
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
 
-        // ✅ Save address properly
-        user.address = { street, buildingName, landmark, city, state, pinCode, isDefault };
-        const updatedUser = await user.save();
+    // Update address fields (merge with existing address)
+    user.address = {
+      ...user.address, // Keep existing address fields
+      street,
+      buildingName,
+      landmark,
+      city,
+      state,
+      pinCode,
+      isDefault,
+    };
 
-        console.log('Updated User:', updatedUser);
-        res.json({ message: 'Address updated successfully', address: updatedUser.address });
+    // Save updated user
+    const updatedUser = await user.save();
 
-    } catch (error) {
-        console.error('Error updating address:', error);
-        res.status(500).json({ message: 'Failed to update address' });
-    }
+    console.log('Updated User:', updatedUser);
+    res.json({
+      message: 'Address updated successfully',
+      user: updatedUser, // Return the entire updated user object
+    });
+
+  } catch (error) {
+    console.error('Error updating address:', error);
+    res.status(500).json({ message: 'Failed to update address' });
+  }
 });
