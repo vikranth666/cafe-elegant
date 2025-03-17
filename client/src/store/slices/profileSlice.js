@@ -1,24 +1,60 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-// Thunk for fetching orders with proper error handling
+// Define the API base URL
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '';
+
+// Helper function to build valid URLs
+const buildUrl = (path, params = {}) => {
+  try {
+    // Ensure the base URL includes protocol
+    let baseUrl = API_BASE_URL;
+    if (baseUrl && !baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+      baseUrl = `http://${baseUrl}`;
+    }
+    
+    // Create URL object
+    const url = new URL(path, baseUrl);
+    
+    // Add query parameters
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.append(key, value);
+      }
+    });
+    
+    return url.toString();
+  } catch (error) {
+    console.error("Error building URL:", error);
+    // Fallback to a safe default
+    return `${baseUrl || 'http://localhost:5000'}${path}`;
+  }
+};
+
+// Thunk for fetching orders
 export const fetchOrders = createAsyncThunk(
   'profile/fetchOrders',
   async (userId, { rejectWithValue }) => {
     try {
-      // Use the correct API endpoint with query parameter as in your backend code
-      const response = await fetch(`/api/orders?userId=${userId}`);
-      
-      // Check if request was successful
+      const url = buildUrl('/api/orders/user-orders', { userId });
+      console.log("Fetching orders from:", url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error: ${response.status}`);
+        throw new Error(`Error: ${response.status}`);
       }
-      
+
       const orders = await response.json();
-      console.log("Orders fetched successfully:", orders);
+      console.log('Orders fetched successfully:', orders);
       return orders;
     } catch (error) {
-      console.error("Error fetching orders:", error);
+      console.error('Error fetching orders:', error);
       return rejectWithValue(error.message);
     }
   }
@@ -29,13 +65,21 @@ export const fetchOrderDetails = createAsyncThunk(
   'profile/fetchOrderDetails',
   async ({ userId, orderId }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}?userId=${userId}`);
-      
+      const url = buildUrl(`/api/orders/${orderId}`, { userId });
+      console.log("Fetching order details from:", url);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error: ${response.status}`);
+        throw new Error(`Error: ${response.status}`);
       }
-      
+
       const orderDetails = await response.json();
       console.log("Order details fetched successfully:", orderDetails);
       return orderDetails;
@@ -51,26 +95,29 @@ export const addOrderToProfile = createAsyncThunk(
   'profile/addOrderToProfile',
   async ({ userId, order }, { rejectWithValue }) => {
     try {
-      const response = await fetch('/api/orders', {
+      const url = buildUrl('/api/orders');
+      console.log("Adding order at:", url);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}` // Add auth token if required
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify({
           userId,
-          ...order
+          ...order,
         }),
       });
-      
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error: ${response.status}`);
+        throw new Error(`Error: ${response.status}`);
       }
-      
+
       const savedOrder = await response.json();
       return { userId, order: savedOrder.order || savedOrder };
     } catch (error) {
+      console.error("Error adding order:", error);
       return rejectWithValue(error.message);
     }
   }
@@ -81,20 +128,23 @@ export const cancelOrder = createAsyncThunk(
   'profile/cancelOrder',
   async ({ orderId, userId }, { rejectWithValue }) => {
     try {
-      const response = await fetch(`/api/orders/${orderId}`, {
+      const url = buildUrl(`/api/orders/${orderId}`);
+      console.log("Canceling order at:", url);
+
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Error: ${response.status}`);
+        throw new Error(`Error: ${response.status}`);
       }
 
       return { orderId, userId };
     } catch (error) {
+      console.error("Error canceling order:", error);
       return rejectWithValue(error.message);
     }
   }
@@ -119,7 +169,7 @@ const profileSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -137,21 +187,22 @@ const profileSlice = createSlice({
         state.error = action.payload; // Set error message
       })
 
-      // Add these cases inside the extraReducers builder
+      // Order Details Cases
       .addCase(fetchOrderDetails.pending, (state) => {
-      state.isLoading = true;
-      state.error = null;
-      state.selectedOrder = null;
+        state.isLoading = true;
+        state.error = null;
+        state.selectedOrder = null;
       })
       .addCase(fetchOrderDetails.fulfilled, (state, action) => {
-      state.isLoading = false;
-      state.selectedOrder = action.payload;
+        state.isLoading = false;
+        state.selectedOrder = action.payload;
       })
       .addCase(fetchOrderDetails.rejected, (state, action) => {
-      state.isLoading = false;
-      state.error = action.payload;
-      state.selectedOrder = null;
+        state.isLoading = false;
+        state.error = action.payload;
+        state.selectedOrder = null;
       })
+      
       // Add Order Cases
       .addCase(addOrderToProfile.pending, (state) => {
         state.isLoading = true;
